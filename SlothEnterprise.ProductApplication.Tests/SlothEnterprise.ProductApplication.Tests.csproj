@@ -5,7 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoFixture" Version="4.8.0" />
+    <PackageReference Include="AutoFixture" Version="4.14.0" />
+    <PackageReference Include="AutoFixture.AutoMoq" Version="4.14.0" />
+    <PackageReference Include="AutoFixture.XUnit2" Version="4.14.0" />
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
     <PackageReference Include="Moq" Version="4.15.1" />
     <PackageReference Include="NSubstitute" Version="4.0.0" />

@@ -1,8 +1,7 @@
-﻿using FluentAssertions;
+﻿using System;
+using AutoFixture.Xunit2;
+using FluentAssertions;
 using Moq;
-using SlothEnterprise.External;
-using SlothEnterprise.External.V1;
-using SlothEnterprise.ProductApplication.Applications;
 using SlothEnterprise.ProductApplication.Products;
 using Xunit;
 
@@ -10,30 +9,116 @@ namespace SlothEnterprise.ProductApplication.Tests
 {
     public class ProductApplicationTests
     {
-        private readonly ProductApplicationService _sut;
-        private readonly Mock<ISelectInvoiceService> _selectInvoiceServiceMock = new Mock<ISelectInvoiceService>();
-        private readonly Mock<IConfidentialInvoiceService> _confidentialInvoiceServiceMock = new Mock<IConfidentialInvoiceService>();
-        private readonly Mock<IBusinessLoansService> _businessLoansServiceMock = new Mock<IBusinessLoansService>();
-        private readonly ISellerApplication _sellerApplication;
-        private readonly Mock<IApplicationResult> _result = new Mock<IApplicationResult>();
-
-        public ProductApplicationTests()
+        [Theory]
+        [InlineAutoData(1, true)]
+        [InlineAutoData(50, true)]
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithConfidentialInvoiceDiscount_ShouldReturnApplicationId(
+            int applicationId,
+            bool success)
         {
-            _sut = new ProductApplicationService(_selectInvoiceServiceMock.Object, _confidentialInvoiceServiceMock.Object, _businessLoansServiceMock.Object);
-            _result.SetupProperty(p => p.ApplicationId, 1);
-            _result.SetupProperty(p => p.Success, true);
-            var sellerApplicationMock = new Mock<ISellerApplication>();
-            sellerApplicationMock.SetupProperty(p => p.Product, new ConfidentialInvoiceDiscount());
-            sellerApplicationMock.SetupProperty(p => p.CompanyData, new SellerCompanyData());
-            _sellerApplication = sellerApplicationMock.Object;
+            var applicationResult = this.RunConfidentialInvoiceDiscountTest(applicationId, success);
+            applicationResult.Should().Be(applicationId);
+        }
+
+        [Theory]
+        [InlineAutoData(1, false)]
+        [InlineAutoData(50, false)]
+        [InlineAutoData(null, true)]
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithConfidentialInvoiceDiscount_ShouldReturnMinusOne(
+            int? applicationId,
+            bool success)
+        {
+            var applicationResult = this.RunConfidentialInvoiceDiscountTest(applicationId, success);
+            applicationResult.Should().Be(-1);
+        }
+
+        [Theory]
+        [InlineAutoData(1, true)]
+        [InlineAutoData(50, true)]
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithBusinessLoans_ShouldReturnApplicationId(
+            int applicationId,
+            bool success)
+        {
+            var applicationResult = this.RunBusinessLoanTest(applicationId, success);
+            applicationResult.Should().Be(applicationId);
+        }
+
+        [Theory]
+        [InlineAutoData(1, false)]
+        [InlineAutoData(50, false)]
+        [InlineAutoData(null, true)]
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithBusinessLoans_ShouldReturnMinusOne(
+            int? applicationId,
+            bool success)
+        {
+            var applicationResult = this.RunBusinessLoanTest(applicationId, success);
+            applicationResult.Should().Be(-1);
+        }
+
+        [Theory]
+        [InlineAutoData(1)]
+        [InlineAutoData(10)]
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithSelectInvoiceDiscount_ShouldReturnServiceResult(
+            int serviceResult)
+        {
+            var productApplicationService = new ProductApplicationServiceBuilder()
+                .WithSelectInvoiceResult(serviceResult)
+                .Build();
+
+            var application = new ApplicationBuilder()
+                .WithProduct(new SelectiveInvoiceDiscount())
+                .Build();
+
+            var applicationResult = productApplicationService
+                .SubmitApplicationFor(application);
+            applicationResult.Should().Be(serviceResult);
         }
 
         [Fact]
-        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithSelectiveInvoiceDiscount_ShouldReturnOne()
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithoutRecognisedApplicationType_ShouldThrowException()
         {
-            _confidentialInvoiceServiceMock.Setup(m => m.SubmitApplicationFor(It.IsAny<CompanyDataRequest>(), It.IsAny<decimal>(), It.IsAny<decimal>(), It.IsAny<decimal>())).Returns(_result.Object);
-            var result = _sut.SubmitApplicationFor(_sellerApplication);
-            result.Should().Be(1);
+            var productApplicationService = new ProductApplicationServiceBuilder().Build();
+            var application = new ApplicationBuilder().WithProduct(new Mock<IProduct>().Object).Build();
+            Action act = () => productApplicationService.SubmitApplicationFor(application);
+            act.Should().Throw<InvalidOperationException>();
+        }
+
+        private int RunBusinessLoanTest(int? applicationId, bool success)
+        {
+            var result = new ApplicationResultBuilder()
+                .WithApplicationId(applicationId)
+                .WithSuccess(success)
+                .Build();
+
+            var productApplicationService = new ProductApplicationServiceBuilder()
+                .WithBusinessLoansResult(result)
+                .Build();
+
+            var application = new ApplicationBuilder()
+                .WithProduct(new BusinessLoans())
+                .Build();
+
+            return productApplicationService
+                .SubmitApplicationFor(application);
+        }
+
+        private int RunConfidentialInvoiceDiscountTest(int? applicationId, bool success)
+        {
+            var result = new ApplicationResultBuilder()
+                .WithApplicationId(applicationId)
+                .WithSuccess(success)
+                .Build();
+
+            var productApplicationService = new ProductApplicationServiceBuilder()
+                .WithConfidentialInvoiceResult(result)
+                .Build();
+
+            var application = new ApplicationBuilder()
+                .WithProduct(new ConfidentialInvoiceDiscount())
+                .Build();
+
+            return productApplicationService
+                .SubmitApplicationFor(application);
         }
     }
 }
