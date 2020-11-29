@@ -3,6 +3,7 @@ using SlothEnterprise.External;
 using SlothEnterprise.External.V1;
 using SlothEnterprise.ProductApplication.Applications;
 using SlothEnterprise.ProductApplication.Products;
+using SlothEnterprise.ProductApplication.Products.SelectiveInvoiceDiscounts;
 
 namespace SlothEnterprise.ProductApplication
 {

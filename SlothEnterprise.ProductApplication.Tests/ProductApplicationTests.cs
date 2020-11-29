@@ -3,6 +3,7 @@ using AutoFixture.Xunit2;
 using FluentAssertions;
 using Moq;
 using SlothEnterprise.ProductApplication.Products;
+using SlothEnterprise.ProductApplication.Products.SelectiveInvoiceDiscounts;
 using Xunit;
 
 namespace SlothEnterprise.ProductApplication.Tests
