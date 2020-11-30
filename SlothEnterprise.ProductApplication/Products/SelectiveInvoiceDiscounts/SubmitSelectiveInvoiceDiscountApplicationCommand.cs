@@ -1,9 +1,12 @@
 namespace SlothEnterprise.ProductApplication.Products.SelectiveInvoiceDiscounts
 {
-    public class SubmitApplicationCommand
+    public class SubmitSelectiveInvoiceDiscountApplicationCommand
     {
-        public SubmitApplicationCommand(decimal invoiceAmount, decimal advantagePercentage, int companyNumber)
-        { 
+        public SubmitSelectiveInvoiceDiscountApplicationCommand(
+            decimal invoiceAmount,
+            decimal advantagePercentage,
+            int companyNumber)
+        {
             this.InvoiceAmount = invoiceAmount;
             this.AdvancePercentage = advantagePercentage;
             this.CompanyNumber = companyNumber;

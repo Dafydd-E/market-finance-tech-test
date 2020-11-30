@@ -4,6 +4,7 @@ using AutoFixture.Xunit2;
 using FluentAssertions;
 using Moq;
 using SlothEnterprise.External.V1;
+using SlothEnterprise.ProductApplication.Products;
 using SlothEnterprise.ProductApplication.Products.SelectiveInvoiceDiscounts;
 using Xunit;
 
@@ -28,12 +29,8 @@ namespace SlothEnterprise.ProductApplication.Tests.Products.SelectiveInvoiceDisc
                         It.IsAny<decimal>()))
                 .Returns(serviceResult);
 
-            var application = new ApplicationBuilder()
-                .WithProduct(new SelectiveInvoiceDiscount())
-                .Build();
-
             var applicationResult = await new SelectiveInvoiceDiscountService(selectInvoiceServiceMock.Object)
-                .ExecuteAsync(new SubmitApplicationCommand(
+                .ExecuteAsync(new SubmitSelectiveInvoiceDiscountApplicationCommand(
                     invoiceAmount,
                     advantagePercentage,
                     companyNumber));
@@ -57,12 +54,8 @@ namespace SlothEnterprise.ProductApplication.Tests.Products.SelectiveInvoiceDisc
                         It.IsAny<decimal>()))
                 .Throws(exception);
 
-            var application = new ApplicationBuilder()
-                .WithProduct(new SelectiveInvoiceDiscount())
-                .Build();
-
             var applicationResult = await new SelectiveInvoiceDiscountService(selectInvoiceServiceMock.Object)
-                .ExecuteAsync(new SubmitApplicationCommand(
+                .ExecuteAsync(new SubmitSelectiveInvoiceDiscountApplicationCommand(
                     invoiceAmount,
                     advantagePercentage,
                     companyNumber));

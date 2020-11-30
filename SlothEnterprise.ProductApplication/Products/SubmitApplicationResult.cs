@@ -1,13 +1,13 @@
 using System;
 
-namespace SlothEnterprise.ProductApplication.Products.SelectiveInvoiceDiscounts
+namespace SlothEnterprise.ProductApplication.Products
 {
-    public class SubmitApplicationResult
+    public class SubmitApplicationResult : IResult
     {
         private SubmitApplicationResult(int result)
         {
             this.Successful = true;
-            this.Result = result;
+            this.Data = result;
         }
 
         private SubmitApplicationResult(string message, Exception exception)
@@ -17,7 +17,7 @@ namespace SlothEnterprise.ProductApplication.Products.SelectiveInvoiceDiscounts
             this.Successful = false;
         }
 
-        public int Result { get; }
+        public int Data { get; }
 
         public bool Successful { get; }
 
@@ -30,9 +30,9 @@ namespace SlothEnterprise.ProductApplication.Products.SelectiveInvoiceDiscounts
             return new SubmitApplicationResult(result);
         }
 
-        public static SubmitApplicationResult Failure(string reason = null, Exception exception = null)
+        public static SubmitApplicationResult Failure(string message = null, Exception exception = null)
         {
-            return new SubmitApplicationResult(reason, exception);
+            return new SubmitApplicationResult(message, exception);
         }
     }
 }
