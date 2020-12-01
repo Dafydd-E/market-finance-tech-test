@@ -1,8 +1,7 @@
-using Moq;
 using SlothEnterprise.ProductApplication.Applications;
 using SlothEnterprise.ProductApplication.Products;
 
-namespace SlothEnterprise.ProductApplication.Tests
+namespace SlothEnterprise.ProductApplication.Tests.Data.Builders
 {
     public class ApplicationBuilder
     {
@@ -24,11 +23,13 @@ namespace SlothEnterprise.ProductApplication.Tests
 
         public ISellerApplication Build()
         {
-            var sellerApplicationMock = new Mock<ISellerApplication>();
-            sellerApplicationMock.SetupProperty(p => p.Product, this.product);
-            sellerApplicationMock.SetupProperty(p => p.CompanyData, this.sellerCompanyData);
+            var application = new SellerApplication
+            {
+                CompanyData = this.sellerCompanyData,
+                Product = this.product,
+            };
 
-            return sellerApplicationMock.Object;
+            return application;
         }
     }
 }

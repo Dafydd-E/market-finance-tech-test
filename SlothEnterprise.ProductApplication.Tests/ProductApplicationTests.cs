@@ -2,8 +2,9 @@
 using AutoFixture.Xunit2;
 using FluentAssertions;
 using Moq;
+using SlothEnterprise.ProductApplication.Applications;
 using SlothEnterprise.ProductApplication.Products;
-using SlothEnterprise.ProductApplication.Products.SelectiveInvoiceDiscounts;
+using SlothEnterprise.ProductApplication.Tests.Data.Builders;
 using Xunit;
 
 namespace SlothEnterprise.ProductApplication.Tests
@@ -11,115 +12,95 @@ namespace SlothEnterprise.ProductApplication.Tests
     public class ProductApplicationTests
     {
         [Theory]
-        [InlineAutoData(1, true)]
-        [InlineAutoData(50, true)]
-        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithConfidentialInvoiceDiscount_ShouldReturnApplicationId(
-            int applicationId,
-            bool success)
-        {
-            var applicationResult = this.RunConfidentialInvoiceDiscountTest(applicationId, success);
-            applicationResult.Should().Be(applicationId);
-        }
-
-        [Theory]
-        [InlineAutoData(1, false)]
-        [InlineAutoData(50, false)]
-        [InlineAutoData(null, true)]
-        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithConfidentialInvoiceDiscount_ShouldReturnMinusOne(
-            int? applicationId,
-            bool success)
-        {
-            var applicationResult = this.RunConfidentialInvoiceDiscountTest(applicationId, success);
-            applicationResult.Should().Be(-1);
-        }
-
-        [Theory]
-        [InlineAutoData(1, true)]
-        [InlineAutoData(50, true)]
-        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithBusinessLoans_ShouldReturnApplicationId(
-            int applicationId,
-            bool success)
-        {
-            var applicationResult = this.RunBusinessLoanTest(applicationId, success);
-            applicationResult.Should().Be(applicationId);
-        }
-
-        [Theory]
-        [InlineAutoData(1, false)]
-        [InlineAutoData(50, false)]
-        [InlineAutoData(null, true)]
-        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithBusinessLoans_ShouldReturnMinusOne(
-            int? applicationId,
-            bool success)
-        {
-            var applicationResult = this.RunBusinessLoanTest(applicationId, success);
-            applicationResult.Should().Be(-1);
-        }
-
-        [Theory]
-        [InlineAutoData(1)]
         [InlineAutoData(10)]
-        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithSelectInvoiceDiscount_ShouldReturnServiceResult(
-            int serviceResult)
+        [InlineAutoData(-1)]
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithSelectiveInvoiceDiscountProduct_ShouldReturnApplicationId(
+            int applicationId)
         {
             var productApplicationService = new ProductApplicationServiceBuilder()
-                .WithSelectInvoiceResult(serviceResult)
+                .WithSelectInvoiceResult(applicationId)
                 .Build();
 
             var application = new ApplicationBuilder()
                 .WithProduct(new SelectiveInvoiceDiscount())
+                .WithSellerCompanyData(new SellerCompanyData())
                 .Build();
 
-            var applicationResult = productApplicationService
-                .SubmitApplicationFor(application);
-            applicationResult.Should().Be(serviceResult);
+            var result = productApplicationService.SubmitApplicationFor(application);
+            result.Should().Be(applicationId);
         }
 
-        [Fact]
-        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithoutRecognisedApplicationType_ShouldThrowException()
+        [Theory]
+        [AutoData]
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithSelectiveInvoiceDiscountProduct_ShouldResolveExceptionToErrorCode(
+            Exception exception)
         {
-            var productApplicationService = new ProductApplicationServiceBuilder().Build();
-            var application = new ApplicationBuilder().WithProduct(new Mock<IProduct>().Object).Build();
-            Action act = () => productApplicationService.SubmitApplicationFor(application);
-            act.Should().Throw<InvalidOperationException>();
-        }
-
-        private int RunBusinessLoanTest(int? applicationId, bool success)
-        {
-            var result = new ApplicationResultBuilder()
-                .WithApplicationId(applicationId)
-                .WithSuccess(success)
-                .Build();
-
             var productApplicationService = new ProductApplicationServiceBuilder()
-                .WithBusinessLoansResult(result)
+                .WithSelectInvoiceException(exception)
                 .Build();
 
             var application = new ApplicationBuilder()
-                .WithProduct(new BusinessLoans())
+                .WithProduct(new SelectiveInvoiceDiscount())
+                .WithSellerCompanyData(new SellerCompanyData())
                 .Build();
 
-            return productApplicationService
-                .SubmitApplicationFor(application);
+            var result = productApplicationService.SubmitApplicationFor(application);
+            result.Should().Be(-1);
         }
 
-        private int RunConfidentialInvoiceDiscountTest(int? applicationId, bool success)
+        [Theory]
+        [InlineAutoData(10, true, 10)]
+        [InlineAutoData(10, false, -1)]
+        [InlineAutoData(null, true, -1)]
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithConfidentialInvoiceDiscountsProduct_ShouldReturnResultDataOrErrorCode(
+            int? applicationId,
+            bool success,
+            int expected)
         {
-            var result = new ApplicationResultBuilder()
+            var applicationResult = new ApplicationResultBuilder()
                 .WithApplicationId(applicationId)
                 .WithSuccess(success)
                 .Build();
 
             var productApplicationService = new ProductApplicationServiceBuilder()
-                .WithConfidentialInvoiceResult(result)
+                .WithConfidentialInvoiceResult(applicationResult)
                 .Build();
 
             var application = new ApplicationBuilder()
                 .WithProduct(new ConfidentialInvoiceDiscount())
+                .WithSellerCompanyData(new SellerCompanyData())
                 .Build();
 
-            return productApplicationService
-                .SubmitApplicationFor(application);
+            var result = productApplicationService.SubmitApplicationFor(application);
+            result.Should().Be(expected);
+        }
+
+        [Theory]
+        [InlineAutoData(10, true, 10)]
+        [InlineAutoData(10, false, -1)]
+        [InlineAutoData(null, true, -1)]
+        public void ProductApplicationService_SubmitApplicationFor_WhenCalledWithBusinessLoansProduct_ShouldReturnResultDataOrErrorCode(
+            int? applicationId,
+            bool success,
+            int expected)
+        {
+            var applicationResult = new ApplicationResultBuilder()
+                .WithApplicationId(applicationId)
+                .WithSuccess(success)
+                .Build();
+
+            var productApplicationService = new ProductApplicationServiceBuilder()
+                .WithBusinessLoansResult(applicationResult)
+                .Build();
+
+            var application = new ApplicationBuilder()
+                .WithProduct(new BusinessLoans())
+                .WithSellerCompanyData(new SellerCompanyData())
+                .Build();
+
+            var result = productApplicationService.SubmitApplicationFor(application);
+
+            result.Should().Be(expected);
         }
     }
 }
